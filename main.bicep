@@ -33,6 +33,7 @@ module customerPipeline 'modules/pipelines/customer.bicep' = {
     dataFactoryName: dataFactoryName
     sftpLinkedServiceName: linkedServices.outputs.sftpLinkedServiceName
     sqlLinkedServiceName: linkedServices.outputs.sqlLinkedServiceName
+    blobLinkedServiceName: linkedServices.outputs.blobStorageLinkedServiceName
   }
 }
 

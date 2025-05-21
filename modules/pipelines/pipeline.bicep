@@ -13,12 +13,18 @@ param tableSchema array = []
 
 param mapping array = []
 
+param triggerTime string = '00:00'
+param triggerTimeZone string = 'Eastern Standard Time'
+param triggerStartDate string = utcNow('yyyy-MM-dd')
+
 param typeConversionSettings object = {
     allowTypePromotion: true
     allowTypeDemotion: true
     allowImplicitConversion: true
     treatBooleanAsNumber: true
 }
+
+param blobLinkedServiceName string
 
 var ftpDatasetName = 'ftp${pipelineName}'
 var sqlDatasetName = 'sql${pipelineName}'
@@ -33,6 +39,10 @@ resource sftpLinkedService 'Microsoft.DataFactory/factories/linkedservices@2018-
 
 resource sqlLinkedService 'Microsoft.DataFactory/factories/linkedservices@2018-06-01' existing = {
   name: sqlLinkedServiceName
+}
+
+resource blobStorageLinkedService 'Microsoft.DataFactory/factories/linkedservices@2018-06-01' existing = {
+  name: blobLinkedServiceName
 }
 
 resource ftpDataset 'Microsoft.DataFactory/factories/datasets@2018-06-01'= {
@@ -96,6 +106,20 @@ resource pipeline 'Microsoft.DataFactory/factories/pipelines@2018-06-01' = {
           }
         ]
         typeProperties: {
+          enableSkipIncompatibleRow: true
+          logSettings: {
+            enableCopyActivityLog: true
+            copyActivityLogSettings: {
+              logLevel: 'Warning'
+            }
+            logLocationSettings: {
+              linkedServiceName: {
+                referenceName: blobStorageLinkedService.name
+                type: 'LinkedServiceReference'
+              }
+              path: 'logs/${pipelineName}'
+            }
+          }
           source: {
             type: 'DelimitedTextSource'
           }
@@ -111,6 +135,32 @@ resource pipeline 'Microsoft.DataFactory/factories/pipelines@2018-06-01' = {
         }
       }
     ]
+  }
+}
+
+resource scheduleTrigger 'Microsoft.DataFactory/factories/triggers@2018-06-01' = {
+  parent: dataFactory
+  name: '${pipelineName}-trigger'
+  properties: {
+    type: 'ScheduleTrigger'
+    description: 'Daily trigger for ${pipelineName} pipeline'
+    pipelines: [
+      {
+        pipelineReference: {
+          referenceName: pipeline.name
+          type: 'PipelineReference'
+        }
+        parameters: {}
+      }
+    ]
+    typeProperties: {
+      recurrence: {
+        frequency: 'Day'
+        interval: 1
+        startTime: '${triggerStartDate}T${triggerTime}:00Z'
+        timeZone: triggerTimeZone
+      }
+    }
   }
 }
 

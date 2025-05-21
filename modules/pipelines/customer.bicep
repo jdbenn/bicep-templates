@@ -1,6 +1,7 @@
 param dataFactoryName string
 param sftpLinkedServiceName string
 param sqlLinkedServiceName string
+param blobLinkedServiceName string
 
 var fileSchema = [
   {
@@ -143,5 +144,6 @@ module pipeline './pipeline.bicep' = {
     tableSchemaName: 'dbo'
     tableSchema: tableSchema
     mapping: mapping
+    blobLinkedServiceName: blobLinkedServiceName
   }
 }
