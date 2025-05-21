@@ -18,10 +18,8 @@ param triggerTimeZone string = 'Eastern Standard Time'
 param triggerStartDate string = utcNow('yyyy-MM-dd')
 
 param typeConversionSettings object = {
-    allowTypePromotion: true
-    allowTypeDemotion: true
-    allowImplicitConversion: true
-    treatBooleanAsNumber: true
+  allowDataTruncation: false
+  treatBooleanAsNumber:false
 }
 
 param blobLinkedServiceName string
@@ -44,6 +42,7 @@ resource sqlLinkedService 'Microsoft.DataFactory/factories/linkedservices@2018-0
 resource blobStorageLinkedService 'Microsoft.DataFactory/factories/linkedservices@2018-06-01' existing = {
   name: blobLinkedServiceName
 }
+
 
 resource ftpDataset 'Microsoft.DataFactory/factories/datasets@2018-06-01'= {
   parent: dataFactory
@@ -91,7 +90,7 @@ resource pipeline 'Microsoft.DataFactory/factories/pipelines@2018-06-01' = {
   properties: {
     activities: [
       {
-        name: 'Copy from FTP'
+        name: 'Load CSV'
         type: 'Copy'
         inputs: [
           {
@@ -117,7 +116,7 @@ resource pipeline 'Microsoft.DataFactory/factories/pipelines@2018-06-01' = {
                 referenceName: blobStorageLinkedService.name
                 type: 'LinkedServiceReference'
               }
-              path: 'logs/${pipelineName}'
+              path: 'logs/${pipelineName}/'
             }
           }
           source: {
@@ -159,8 +158,11 @@ resource scheduleTrigger 'Microsoft.DataFactory/factories/triggers@2018-06-01' =
         interval: 1
         startTime: '${triggerStartDate}T${triggerTime}:00Z'
         timeZone: triggerTimeZone
+        schedule: {
+          hours: [00]
+          minutes: [00]
+        }
       }
     }
   }
 }
-

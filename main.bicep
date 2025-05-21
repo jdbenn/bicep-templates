@@ -4,9 +4,11 @@ param sftpHost string
 @secure()
 param sftpUsername string
 @secure()
-param sftpPassword string
-@secure()
 param connectionString string
+@secure()
+param sshKey string
+@secure()
+param sshKeyPassphrase string
 
 targetScope = 'subscription'
 
@@ -14,15 +16,16 @@ resource resourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' existing 
   name: 'data-pros'
 }
 
-module linkedServices 'modules/linked.bicep' = {
+module linkedServices 'modules/linked-services.bicep' = {
   name: 'datapros-linkedservices'
   scope: resourceGroup
   params: {
     dataFactoryName: dataFactoryName
     sftpHost: sftpHost
-    sftpUsername: sftpUsername
-    sftpPassword: sftpPassword
     connectionString: connectionString
+    sshUsername: sftpUsername
+    sshKey: sshKey
+    sshKeyPassphrase: sshKeyPassphrase
   }
 }
 
